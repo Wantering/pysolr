@@ -221,11 +221,12 @@ class Solr(object):
         solr = pysolr.Solr('http://localhost:8983/solr', timeout=10)
 
     """
-    def __init__(self, url, decoder=None, timeout=60):
+    def __init__(self, url, decoder=None, timeout=60, max_get_length=1024):
         self.decoder = decoder or json.JSONDecoder()
         self.url = url
         self.timeout = timeout
         self.log = self._get_log()
+        self.max_get_length = max_get_length
         self.session = requests.Session()
 
     def _get_log(self):
@@ -300,7 +301,7 @@ class Solr(object):
         params['wt'] = 'json'
         params_encoded = safe_urlencode(params, True)
 
-        if len(params_encoded) < 1024:
+        if len(params_encoded) < self.max_get_length:
             # Typical case.
             path = 'select/?%s' % params_encoded
             return self._send_request('get', path)
