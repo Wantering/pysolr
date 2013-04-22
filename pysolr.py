@@ -296,14 +296,14 @@ class Solr(object):
 
         return force_unicode(resp.content)
 
-    def _select(self, params):
+    def _select(self, path, params):
         # specify json encoding of results
         params['wt'] = 'json'
         params_encoded = safe_urlencode(params, True)
 
         if len(params_encoded) < self.max_get_length:
             # Typical case.
-            path = 'select/?%s' % params_encoded
+            path = '%s/?%s' % (path, params_encoded)
             return self._send_request('get', path)
         else:
             # Handles very long queries by submitting as a POST.
@@ -572,7 +572,11 @@ class Solr(object):
         """
         params = {'q': q}
         params.update(kwargs)
-        response = self._select(params)
+        path = 'select'
+        if 'path' in params:
+            path = params['path']
+            del params['path']
+        response = self._select(path, params)
 
         # TODO: make result retrieval lazy and allow custom result objects
         result = self.decoder.decode(response)
